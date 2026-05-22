@@ -1,0 +1,26 @@
+# Credentials and sensitive files
+credentials.h
+credentials.cpp
+*.key
+*.pem
+token.json
+*.env
+
+# Compiled files
+*.o
+*.out
+*.exe
+a.out
+main_gooddisplay
+gcal
+
+# Build directories
+build/
+bin/
+
+# IDE files
+.vscode/
+*.swp
+
+# OS files
+.DS_Store
