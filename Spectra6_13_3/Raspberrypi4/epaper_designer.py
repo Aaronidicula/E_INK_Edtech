@@ -12,7 +12,7 @@ is for students to interactively design, preview and push layouts.
 Features:
   • 3 layout templates  : Weekly · Monthly · Yearly
   • Live canvas preview : scaled 1:3 representation of 1600×1200
-  • Widget panel        : toggle/reposition Photo, Calendar, Quote,
+  • Widget panel        : toggle/reposition Photo, Calendar, Events, Quote,
                           Tasks, Date header, custom Text blocks
   • Style controls      : accent colour per widget, font size sliders
   • Photo folder picker : same random-slideshow logic as main script
@@ -142,8 +142,13 @@ def default_monthly():
             },
             "tasks": {
                 "enabled": True, "x": 504, "y": 648,
-                "w": 1096, "h": 240,
+                "w": 540,  "h": 240,
                 "colour": "Red", "font_size": 20, "label": "Task list"
+            },
+            "events": {
+                "enabled": True, "x": 1048, "y": 648,
+                "w": 552,  "h": 240,
+                "colour": "Blue", "font_size": 20, "label": "Events panel"
             },
             "quote": {
                 "enabled": True, "x": 0,   "y": 820,
@@ -180,8 +185,13 @@ def default_yearly():
             },
             "tasks": {
                 "enabled": True, "x": 1204, "y": 528,
-                "w": 396,  "h": 486,
+                "w": 396,  "h": 240,
                 "colour": "Red", "font_size": 18, "label": "Task list"
+            },
+            "events": {
+                "enabled": True, "x": 1204, "y": 772,
+                "w": 396,  "h": 242,
+                "colour": "Blue", "font_size": 18, "label": "Events panel"
             },
             "quote": {
                 "enabled": True, "x": 0,   "y": 1014,
@@ -440,6 +450,88 @@ def draw_tasks(draw, widget, tasks):
         draw.text((tx+14, ty), task[:35], font=font_item, fill=(0,0,0))
 
 
+def draw_events(draw, widget, events):
+    """
+    Upcoming-events panel.  Works in any layout — fully draggable/resizable.
+    'events' is a list of dicts: { title, date_str, time_str, colour_hint }
+    Falls back to placeholder rows when no live data is available.
+    """
+    x, y, ww, wh = widget["x"], widget["y"], widget["w"], widget["h"]
+
+    # Background
+    draw.rectangle((x, y, x+ww, y+wh), fill=(255, 255, 255))
+    draw.rectangle((x, y, x+ww, y+3), fill=rgb(widget.get("colour", "Blue")))
+
+    font_hdr  = get_font(widget.get("font_size", 20))
+    font_item = get_font(max(13, widget.get("font_size", 20) - 3))
+    font_small = get_font(max(11, widget.get("font_size", 20) - 6))
+
+    # Header
+    header_h = font_hdr.size + 14
+    draw.rectangle((x, y+3, x+ww, y+3+header_h),
+                   fill=rgb(widget.get("colour", "Blue")))
+    draw.text((x+14, y+3+header_h//2), "UPCOMING EVENTS",
+              font=font_hdr, fill=(255, 255, 255), anchor="lm")
+    draw.rectangle((x, y+3+header_h, x+ww, y+3+header_h+2), fill=(0, 0, 0))
+
+    # Dot colours cycling through palette
+    dot_colours = [rgb("Red"), rgb("Blue"), rgb("Green"),
+                   rgb("Yellow"), rgb("Red"), rgb("Blue"), rgb("Green")]
+
+    # Placeholder rows when no events fetched yet
+    if not events:
+        events = [
+            {"title": "Connect Google Calendar",
+             "date_str": "—", "time_str": ""},
+            {"title": "Events will appear here",
+             "date_str": "—", "time_str": ""},
+        ]
+
+    lh     = font_item.size + 10
+    item_y = y + 3 + header_h + 10
+
+    for i, ev in enumerate(events):
+        if item_y + lh > y + wh - 4:
+            break
+        dc = dot_colours[i % len(dot_colours)]
+
+        # Coloured left accent bar
+        draw.rectangle((x+6, item_y, x+10, item_y + lh - 4), fill=dc)
+
+        # Date badge
+        date_txt = ev.get("date_str", "")
+        if date_txt and date_txt != "—":
+            bw = int(draw.textlength(date_txt, font=font_small)) + 10
+            draw.rectangle((x+16, item_y+2, x+16+bw, item_y+font_small.size+6),
+                           fill=dc)
+            tc_badge = (0,0,0) if dc == rgb("Yellow") else (255,255,255)
+            draw.text((x+21, item_y+4), date_txt,
+                      font=font_small, fill=tc_badge)
+            title_x = x + 16 + bw + 6
+        else:
+            title_x = x + 16
+
+        # Title — truncate to fit width
+        title   = ev.get("title", "")
+        max_w   = x + ww - title_x - 8
+        while title and draw.textlength(title, font=font_item) > max_w:
+            title = title[:-1]
+        if title != ev.get("title", ""):
+            title = title[:-1] + "…"
+        draw.text((title_x, item_y + 1), title, font=font_item, fill=(0, 0, 0))
+
+        # Time (small, right-aligned)
+        time_txt = ev.get("time_str", "")
+        if time_txt:
+            tw = int(draw.textlength(time_txt, font=font_small))
+            draw.text((x + ww - tw - 10, item_y + font_item.size - font_small.size + 2),
+                      time_txt, font=font_small, fill=(120, 120, 120))
+
+        # Separator line
+        item_y += lh
+        draw.rectangle((x+12, item_y-3, x+ww-12, item_y-2), fill=(220,220,220))
+
+
 def draw_quote(draw, widget, quote_text, quote_author):
     x, y, ww, wh = widget["x"], widget["y"], widget["w"], widget["h"]
     draw.rectangle((x, y, x+ww, y+wh), fill=rgb(widget["colour"]))
@@ -478,9 +570,10 @@ def draw_quote(draw, widget, quote_text, quote_author):
         draw.rectangle((bx, y+4, bx+bar_w-2, y+wh-2), fill=c)
 
 
-def render_layout(config, today=None, schedule=None, tasks=None):
+def render_layout(config, today=None, schedule=None, tasks=None, events=None):
     """
     Main render function.  Takes a config dict, returns a PIL Image (1600×1200).
+    'events' is a flat list of dicts {title, date_str, time_str} for month/year views.
     """
     if today is None:
         today = datetime.date.today()
@@ -500,9 +593,9 @@ def render_layout(config, today=None, schedule=None, tasks=None):
     qt = q_widget.get("custom_text", "").strip() or QUOTES[qi][0]
     qa = q_widget.get("custom_author", "").strip() or QUOTES[qi][1]
 
-    # Draw order: bg → photo → calendar → tasks → quote → masthead (top)
+    # Draw order: bg → photo → calendar → tasks → events → quote → masthead (top)
     order = ["photo", "week_strip", "month_grid", "year_grid",
-             "tasks", "quote", "masthead"]
+             "tasks", "events", "quote", "masthead"]
 
     for key in order:
         w = widgets.get(key)
@@ -520,6 +613,8 @@ def render_layout(config, today=None, schedule=None, tasks=None):
             draw_year_grid(draw, w, today)
         elif key == "tasks":
             draw_tasks(draw, w, tasks)
+        elif key == "events":
+            draw_events(draw, w, events or [])
         elif key == "quote":
             draw_quote(draw, w, qt, qa)
 
@@ -533,19 +628,27 @@ def render_layout(config, today=None, schedule=None, tasks=None):
 TOKEN_PATH = os.path.join(SCRIPT_DIR, "token.pickle")
 
 def try_fetch_gcal(week_days):
+    """
+    Returns (schedule, tasks, events).
+    schedule : dict  abbr→[label, ...]   for weekly view
+    tasks    : list  of task strings
+    events   : list  of dicts {title, date_str, time_str} for month/year events panel
+    """
     try:
         from googleapiclient.discovery import build
         from google.auth.transport.requests import Request
         if not os.path.exists(TOKEN_PATH):
-            return None, None
+            return None, None, None
         with open(TOKEN_PATH, "rb") as f:
             creds = pickle.load(f)
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         if not creds or not creds.valid:
-            return None, None
+            return None, None, None
 
         cal = build("calendar", "v3", credentials=creds, cache_discovery=False)
+
+        # ── Weekly schedule (next 7 days keyed by weekday abbr) ───────────────
         t_min = datetime.datetime.combine(week_days[0],  datetime.time.min).isoformat()+"Z"
         t_max = datetime.datetime.combine(week_days[-1], datetime.time.max).isoformat()+"Z"
         result = cal.events().list(
@@ -554,32 +657,62 @@ def try_fetch_gcal(week_days):
         ).execute()
         schedule = {d.strftime("%a"): [] for d in week_days}
         for ev in result.get("items", []):
-            start = ev.get("start", {})
+            start   = ev.get("start", {})
             summary = ev.get("summary", "")[:26]
             if "dateTime" in start:
-                dt = datetime.datetime.fromisoformat(
+                dt    = datetime.datetime.fromisoformat(
                     start["dateTime"].replace("Z", "+00:00")).astimezone()
                 abbr  = dt.strftime("%a")
                 label = f"{dt.strftime('%I:%M%p').lstrip('0')}  {summary}"
             elif "date" in start:
-                d    = datetime.date.fromisoformat(start["date"])
-                abbr = d.strftime("%a")
+                d     = datetime.date.fromisoformat(start["date"])
+                abbr  = d.strftime("%a")
                 label = f"All day  {summary}"
             else:
                 continue
             if abbr in schedule:
                 schedule[abbr].append(label)
 
-        tsk_svc = build("tasks", "v1", credentials=creds, cache_discovery=False)
+        # ── Upcoming events list for month/year views (next 30 days) ──────────
+        today     = datetime.date.today()
+        ev_tmin   = datetime.datetime.combine(today, datetime.time.min).isoformat()+"Z"
+        ev_tmax   = datetime.datetime.combine(
+            today + datetime.timedelta(days=30), datetime.time.max).isoformat()+"Z"
+        ev_result = cal.events().list(
+            calendarId="primary", timeMin=ev_tmin, timeMax=ev_tmax,
+            singleEvents=True, orderBy="startTime", maxResults=20
+        ).execute()
+        events = []
+        for ev in ev_result.get("items", []):
+            start   = ev.get("start", {})
+            summary = ev.get("summary", "(No title)")
+            if "dateTime" in start:
+                dt       = datetime.datetime.fromisoformat(
+                    start["dateTime"].replace("Z", "+00:00")).astimezone()
+                date_str = dt.strftime("%d %b")
+                time_str = dt.strftime("%I:%M %p").lstrip("0")
+            elif "date" in start:
+                d        = datetime.date.fromisoformat(start["date"])
+                date_str = d.strftime("%d %b")
+                time_str = "All day"
+            else:
+                continue
+            events.append({"title": summary, "date_str": date_str,
+                           "time_str": time_str})
+
+        # ── Tasks ─────────────────────────────────────────────────────────────
+        tsk_svc  = build("tasks", "v1", credentials=creds, cache_discovery=False)
         t_result = tsk_svc.tasks().list(
             tasklist="@default", showCompleted=False, maxResults=8
         ).execute()
         tasks = [f"\u2610 {t['title']}" for t in t_result.get("items", [])
                  if t.get("status") != "completed" and t.get("title","").strip()]
-        return schedule, tasks or None
+
+        return schedule, tasks or None, events or None
+
     except Exception as e:
         print(f"[gcal] {e}")
-        return None, None
+        return None, None, None
 
 
 # ════════════════════════════════════════════════════════════════════════════════
@@ -592,10 +725,13 @@ class DesignerApp(tk.Tk):
         self.title("e-Paper Layout Designer  ·  Spectra 6  1600×1200")
         self.resizable(True, True)
         self.configure(bg="#1e1e2e")
+        self.geometry("1200x720")
+        self.minsize(900, 600)
 
         self.config_data  = default_weekly()
         self.schedule     = None
         self.tasks        = None
+        self.events       = None   # flat list for month/year events panel
         self._preview_img = None   # current PIL image
         self._tk_img      = None   # current PhotoImage (keep ref)
 
@@ -610,7 +746,9 @@ class DesignerApp(tk.Tk):
         self._zoom_levels = [1, 2, 3, 4, 6]   # zoom steps (1 = actual size)
 
         self._build_ui()
-        self._refresh_preview()
+        # Defer first render until Tkinter has finished laying out the window.
+        # Without this the canvas has zero size and the image is invisible.
+        self.after(100, self._refresh_preview)
 
     # ── UI Construction ───────────────────────────────────────────────────────
 
@@ -1078,7 +1216,8 @@ class DesignerApp(tk.Tk):
                 self.config_data,
                 today=datetime.date.today(),
                 schedule=self.schedule,
-                tasks=self.tasks
+                tasks=self.tasks,
+                events=self.events
             )
             # Draw any custom text blocks
             draw = ImageDraw.Draw(img)
@@ -1099,6 +1238,8 @@ class DesignerApp(tk.Tk):
 
             self._canvas.delete("all")
             self._canvas.create_image(0, 0, anchor="nw", image=self._tk_img)
+            # Only update scrollregion — do NOT set width/height here because
+            # that fights the grid geometry manager and shrinks the canvas.
             self._canvas.configure(scrollregion=(0, 0, pw, ph))
 
             # Update zoom label
@@ -1124,6 +1265,7 @@ class DesignerApp(tk.Tk):
             "masthead": "#89b4fa", "photo": "#f9e2af",
             "week_strip": "#a6e3a1", "month_grid": "#a6e3a1",
             "year_grid": "#a6e3a1", "tasks": "#f38ba8",
+            "events": "#89dceb",
             "quote": "#cba6f7",
         }
         H = self._HANDLE
@@ -1329,9 +1471,10 @@ class DesignerApp(tk.Tk):
         monday = today - datetime.timedelta(days=today.weekday())
         week_days = [monday + datetime.timedelta(days=i) for i in range(7)]
         def do_sync():
-            s, t = try_fetch_gcal(week_days)
+            s, t, ev = try_fetch_gcal(week_days)
             self.schedule = s
             self.tasks    = t
+            self.events   = ev
             status = "GCal synced ✓" if s else "GCal unavailable (using fallback)"
             self.after(0, lambda: self._set_status(status))
             self.after(0, self._refresh_preview)
