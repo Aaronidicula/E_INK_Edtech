@@ -1,4 +1,8 @@
 #personal notes
+
+#write here
+crontab -e
+
 #Auto refresh every 30 minutes
 */30 7-22 * * * /home/robotpi/einkenv/bin/python3 /home/robotpi/Eink/RaspberryPi/python/examples/calendar_weekly_art.py --no-picker >> /home/robotpi/calendar.log 2>&1
 
