@@ -1,8 +1,6 @@
 #!/usr/bin/python
 # -*- coding:utf-8 -*-
 """
-epaper_designer.py
-──────────────────
 Visual layout designer for the Waveshare 13.3" Spectra 6 e-Paper display.
 Runs as a lightweight Tkinter desktop app on the Raspberry Pi.
 
@@ -19,9 +17,6 @@ Features:
   • Google Calendar sync: fetches live events if token.pickle exists
   • Push to display     : sends rendered image directly to e-paper
   • Save layout         : exports config as JSON + rendered PNG
-
-Usage:
-  python3 epaper_designer.py
 """
 
 import sys, os, json, datetime, pickle, copy, threading, random
