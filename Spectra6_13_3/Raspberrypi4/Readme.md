@@ -11,7 +11,7 @@
   *for every 5th minute of every hour from 7am to 10pm //24hour format(22)//</br>*
 
 
-* For *UI design use epaper_designer.py* and in crontab -e use *epaper_refresh.py* for auto refresh*
+For *UI design use epaper_designer.py* and in crontab -e use *epaper_refresh.py* for auto refresh
 <br> After designing in epaper_designer.py save the png for your reference and save the config under the name *layout.json* that will be used for epaper_refresh.py for every auto refresh </br>
 
 *For Gui (created for raspberry)*
