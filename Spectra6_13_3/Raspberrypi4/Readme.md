@@ -1,4 +1,4 @@
-#personal notes
+*AutoRefresh notes*
 
 #write here
 <br>crontab -e</br>
