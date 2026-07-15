@@ -151,25 +151,33 @@ sudo apt update && sudo apt upgrade -y
 sudo apt install -y python3-pip python3-pil python3-tk python3-pyqt5 git
 ```
 
-### 2.2 Create a virtual environment (recommended)
+### 2.2 - Cloning & SettingUp the Repo in Laptop and RaspberryPi4
+
+### 2.3 Clone
+
+```bash
+git clone https://github.com/Aaronidicula/E_INK_Edtech.git
+```
+### 2.4 Create a virtual environment (recommended)
 
 Using a virtual environment keeps your project dependencies isolated and avoids conflicts with the system Python.
 
 ```bash
+cd E_INK_Edtech/
 python3 -m venv ~/einkenv
 source ~/einkenv/bin/activate
 ```
 
 > 💡 You'll need to activate this environment every time you open a new terminal: `source ~/einkenv/bin/activate`
 
-### 2.3 Install Python packages
+### 2.5 Install Python packages
 
 ```bash
 pip install --upgrade pip
 pip install Pillow PyQt5
 ```
 
-### 2.4 For Google Calendar support (optional but recommended)
+### 2.6 For Google Calendar support
 
 ```bash
 pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib
@@ -177,42 +185,7 @@ pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib
 
 ---
 
-## Step 3 — Waveshare Driver Setup
-
-### 3.1 Clone the Waveshare repository
-
-```bash
-cd ~
-git clone https://github.com/waveshare/e-Paper.git
-```
-
-### 3.2 Locate the driver
-
-The Python driver for your display is at:
-
-```
-~/e-Paper/RaspberryPi_JetsonNano/python/lib/epd13in3E.py
-```
-
-### 3.3 Copy the driver into your project
-
-```bash
-cp ~/e-Paper/RaspberryPi_JetsonNano/python/lib/epd13in3E.py \
-   ~/Eink/RaspberryPi/python/examples/lib/
-```
-
-Or update `sys.path` in the scripts to point to the cloned repo (already handled automatically in the scripts via the `libdir` variable).
-
-### 3.4 Copy the font
-
-```bash
-cp ~/e-Paper/RaspberryPi_JetsonNano/python/pic/Font.ttc \
-   ~/Eink/RaspberryPi/python/examples/pic/
-```
-
----
-
-## Step 4 — Running the Demo (editted.py)
+## Step 3 — Running the Demo (editted.py) (Optional step - can skip)
 
 `editted.py` is a **teaching demo** — not a production script. It's designed to help you understand how the display pipeline works before you touch the calendar code. Read through it alongside running it.
 
@@ -240,13 +213,13 @@ python3 editted.py
 
 ---
 
-## Step 5 — Google Calendar & Tasks Integration
+## Step 4 — Google Calendar & Tasks Integration
 
 There are **two separate `gcal_setup.py` scripts** — one for each workflow. Run the correct one depending on which scripts you intend to use.
 
 The Google Cloud setup steps are the same for both, so do them once:
 
-### 5.1 Create a Google Cloud project (do this once)
+### 4.1 Create a Google Cloud project (do this once)
 
 1. Go to [https://console.cloud.google.com/](https://console.cloud.google.com/)
 2. Create a new project (e.g., "EPaper Calendar")
@@ -254,36 +227,21 @@ The Google Cloud setup steps are the same for both, so do them once:
    - **Google Calendar API**
    - **Google Tasks API**
 
-### 5.2 Create OAuth2 credentials (do this once)
+### 4.2 Create OAuth2 credentials (do this once)
 
 1. In the Cloud Console, go to **APIs & Services → Credentials**
 2. Click **Create Credentials → OAuth client ID**
 3. Set Application type to **Desktop app**
 4. Download the JSON file and rename it to `credentials.json`
 
-### 5.3A — Auth for `editted.py` and `calendar_weekly_art.py`
 
-Copy `credentials.json` into `Raspberrypi4/`:
 
-```bash
-cp ~/Downloads/credentials.json ~/Eink/RaspberryPi/python/examples/
-```
-
-Then run the auth script from that directory:
-
-```bash
-cd ~/Eink/RaspberryPi/python/examples/
-python3 gcal_setup.py
-```
-
-This saves `token.pickle` into `Raspberrypi4/` — right next to `calendar_weekly_art.py`, which is where it looks for it.
-
-### 5.3B — Auth for `epaper_designer.py` and `epaper_refresh.py`
+### 4.3B — Auth for `epaper_designer.py` and `epaper_refresh.py`
 
 Copy `credentials.json` into `GUIsetup/`:
 
 ```bash
-cp ~/Downloads/credentials.json ~/Eink/RaspberryPi/python/examples/GUIsetup/
+scp ~/Downloads(*give the folder path where credentials.json is located*)/credentials.json username@hostname.local ~/Eink/RaspberryPi/python/examples/GUIsetup/
 ```
 
 Then run the auth script from the GUIsetup directory:
