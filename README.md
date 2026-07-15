@@ -241,7 +241,7 @@ The Google Cloud setup steps are the same for both, so do them once:
 Copy `credentials.json` into `GUIsetup/`:
 
 ```bash
-scp ~/Downloads(*give the folder path where credentials.json is located*)/credentials.json username@hostname.local ~/Eink/RaspberryPi/python/examples/GUIsetup/
+scp ~/Downloads(*give the folder path where credentials.json is located*)/credentials.json username@hostname.localrobotpi@robotpi.local:~/E_INK_Edtech/Spectra6_13_3/Raspberrypi4/GUIsetup/GuiScript
 ```
 
 Then run the auth script from the GUIsetup directory:
