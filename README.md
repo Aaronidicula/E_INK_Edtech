@@ -192,7 +192,7 @@ pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib
 ```bash
 cd ~/Eink/RaspberryPi/python/examples/  
 source ~/einkenv/bin/activate
-python3 editted.py  ## run with terminal inside raspberrypiconnect or with monitor and keyboard connected to raspberry pi
+python3 editted.py  ## --> run with terminal inside raspberrypiconnect or with monitor and keyboard connected to raspberry pi
 ```
 
 **What it does, step by step:**
