@@ -174,7 +174,7 @@ source ~/einkenv/bin/activate
 
 ```bash
 pip install --upgrade pip
-pip install Pillow PyQt5
+pip install Pillow PyQt5 ## if it fails --> pip install --break-system-packages Pillow && sudo apt install python3-tk
 ```
 
 ### 2.6 For Google Calendar support
