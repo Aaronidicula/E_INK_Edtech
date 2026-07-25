@@ -188,7 +188,7 @@ pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib
 
 `editted.py` is a **teaching demo** — not a production script. It's designed to help you understand how the display pipeline works before you touch the calendar code. Read through it alongside running it.
 
-### --> run with terminal inside *raspberrypiconnect or with monitor and keyboard connected to raspberry pi*
+### --> run with terminal inside *<u>raspberrypiconnect or with monitor and keyboard connected to raspberry pi</u>*
 ```bash
 cd ~/Eink/RaspberryPi/python/examples/  
 source ~/einkenv/bin/activate
