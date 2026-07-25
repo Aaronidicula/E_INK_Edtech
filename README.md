@@ -374,16 +374,16 @@ crontab -e
 
 Add one of the following lines at the bottom of the file:
 
+**Entered example path bellow to the epaper_refresh.py script. Enter your script path located in raspberypi. It would be inside ***E_INK_Edtech/Spectra6_13_3/Raspberrypi4/GUIsetup/GuiScript/*** in your pi**
+
 **Refresh every 30 minutes, between 7am and 10pm:** 
-*Entered example path bellow to the epaper_refresh.py script. Enter your script path located in raspberypi. It would be inside """E_INK_Edtech/Spectra6_13_3/Raspberrypi4/GUIsetup/GuiScript/""" in your pi*
 ```cron
-*/30 7-22 * * * /home/robotpi/einkenv/bin/python3 /home/robotpi/Eink/RaspberryPi/python/examples/GUIsetup/epaper_refresh.py >> /home/robotpi/epaper_refresh.log 2>&1
+*/30 7-22 * * * /home/robotpi/E_INK_Edtech/einkenv/bin/python3 /home/robotpi/E_INK_Edtech/Spectra6_13_3/Raspberrypi4/GUIsetup/GuiScript/epaper_refresh.py >> /home/robotpi/epaper_refresh.log 2>&1
 ```
 
 **Refresh at the 5th minute of every hour, between 7am and 10pm:**
 ```cron
-5 7-22 * * * /home/robotpi/einkenv/bin/python3 /home/robotpi/Eink/RaspberryPi/python/examples/GUIsetup/epaper_refresh.py >> /home/robotpi/epaper_refresh.log 2>&1
-```
+5 7-22 * * * /home/robotpi/E_INK_Edtech/einkenv/bin/python3 /home/robotpi/E_INK_Edtech/Spectra6_13_3/Raspberrypi4/GUIsetup/GuiScript/epaper_refresh.py >> /home/robotpi/epaper_refresh.log 2>&1
 
 > ⚠️ **Important:** Replace `/home/robotpi/` with your actual home directory path. Use `echo $HOME` to find yours.
 
@@ -423,7 +423,7 @@ Add one of the following lines at the bottom of the file:
 
 ```
 ── Workflow A: Classic / Code-first ──────────────────────────────────────
-  Raspberrypi4/gcal_setup.py      →  Authorise Google (saves token here)
+  Spectra6_13_3/Raspberrypi4/CustomDemoFIles/test_scripts     →  Authorise Google (saves token here)
           ↓
   editted.py                      →  Demo: understand the display API
           ↓
@@ -431,11 +431,11 @@ Add one of the following lines at the bottom of the file:
 
 
 ── Workflow B: GUI Designer ──────────────────────────────────────────────
-  GUIsetup/gcal_setup.py          →  Authorise Google (saves token here)
+  Spectra6_13_3/Raspberrypi4/GUIsetup/GuiScript          →  Authorise Google (saves token here)
           ↓
-  GUIsetup/epaper_designer.py     →  Design layout visually, save layout.json
+  GuiScript/epaper_designer.py     →  Design layout visually, save layout.json
           ↓
-  GUIsetup/epaper_refresh.py      →  Set up in cron for auto-refresh
+  GuiScript/epaper_refresh.py      →  Set up in cron for auto-refresh
 ```
 
 > Most students will use **Workflow B** (GUI) for the final display and **`editted.py`** purely to understand the code concepts first.
