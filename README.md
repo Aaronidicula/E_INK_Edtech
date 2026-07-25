@@ -16,8 +16,8 @@ A complete guide to setting up, running, and customising your Waveshare 13.3" Sp
 6. [Step 3 — Running the Demo (Optional step - can skip)](#step-3--running-the-demo)
 7. [Step 4 — Google Calendar & Tasks Integration](#step-4--google-calendar--tasks-integration)
 8. [Step 5 — The Visual Layout Designer (GUI)](#step-5--the-visual-layout-designer-gui)
-9. 
-10. [Step 7 — Auto-Refresh with Cron](#step-7--auto-refresh-with-cron)
+9. [Step 6 — Auto-Refresh with Cron](#step-6--auto-refresh-with-cron)
+10. 
 11. [Choosing the Right Script for Your Use Case](#choosing-the-right-script-for-your-use-case)
 12. [Customisation Guide](#customisation-guide)
 13. [Troubleshooting](#troubleshooting)
