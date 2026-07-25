@@ -94,7 +94,7 @@ Spectra6_13_3/
     ├── pic/                       # Fonts and assets
     │   └── Font.ttc
     │
-    └── GUIsetup/                  ── GUI Designer & Auto-refresh ────────────
+    └── GUIsetup/GuiScript                 ── GUI Designer & Auto-refresh ────────────
         ├── epaper_designer.py     # Visual drag-and-drop layout designer
         ├── epaper_refresh.py      # Headless cron refresh (reads layout.json)
         ├── layout.json            # ← Saved from designer, read by refresh
@@ -188,10 +188,10 @@ pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib
 
 `editted.py` is a **teaching demo** — not a production script. It's designed to help you understand how the display pipeline works before you touch the calendar code. Read through it alongside running it.
 
-### --> run with terminal inside *<u>raspberrypiconnect or with monitor and keyboard connected to raspberry pi</u>*
+### --> run with terminal inside <u>*raspberrypiconnect or with monitor and keyboard connected to raspberry pi*</u>
 ```bash
-cd ~/Eink/RaspberryPi/python/examples/  
-source ~/einkenv/bin/activate
+cd /Spectra6_13_3/Raspberrypi4/CustomDemoFIles/test_scripts
+source ~/E_INK_Edtech/einkenv/bin/activate
 python3 editted.py
 ```
 
@@ -241,17 +241,18 @@ The Google Cloud setup steps are the same for both, so do them once:
 Copy `credentials.json` into `GUIsetup/`:
 
 ```bash
-scp ~/Downloads(*give the folder path where credentials.json is located*)/credentials.json username@hostname.localrobotpi@robotpi.local:~/E_INK_Edtech/Spectra6_13_3/Raspberrypi4/GUIsetup/GuiScript
+scp ~/Downloads(*give the folder path where credentials.json is located*)/credentials.json username@hostname.local:~/E_INK_Edtech/Spectra6_13_3/Raspberrypi4/GUIsetup/GuiScript
 ```
 
 Then run the auth script from the GUIsetup directory:
 
 ```bash
-cd ~/Eink/RaspberryPi/python/examples/GUIsetup/
+cd
+cd ~/E_INK_Edtech/Spectra6_13_3/RaspberryPi4/GUIsetup/GuiScript/
 python3 gcal_setup.py
 ```
 
-This saves `token.pickle` into `GUIsetup/` — right next to `epaper_designer.py` and `epaper_refresh.py`, which is where they look for it.
+This saves `token.pickle` into `GuiScript` — right next to `epaper_designer.py` and `epaper_refresh.py`, which is where they look for it.
 
 ### 4.4 What successful auth looks like
 
@@ -274,9 +275,10 @@ Setup complete!
 > 💡 If your token ever expires or stops working, delete `token.pickle` and re-run the relevant `gcal_setup.py` to re-authorise.
 
 ### 4.5 Run the main calendar script
-
+## Optional Step 
 ```bash
-cd ~/Eink/RaspberryPi/python/examples/
+cd
+cd ~/E_INK_Edtech/Spectra6_13_3/Raspberrypi4/CustomDemoFIles/test_scripts
 python3 calendar_weekly_art.py
 ```
 
@@ -299,7 +301,8 @@ python3 calendar_weekly_art.py
 `epaper_designer.py` is a full Tkinter desktop app for designing your display layout interactively. Run it on the Pi (with a monitor) or on any Linux computer.
 
 ```bash
-cd ~/Eink/RaspberryPi/python/examples/GUIsetup/
+cd
+cd ~/E_INK_Edtech/Spectra6_13_3/Raspberrypi4/GUIsetup/GuiScript
 python3 epaper_designer.py
 ```
 
@@ -353,7 +356,7 @@ Once you have your `layout.json` saved, `epaper_refresh.py` handles headless aut
 ### 6.1 Test the refresh script manually
 
 ```bash
-cd ~/Eink/RaspberryPi/python/examples/GUIsetup/
+cd ~/E_INK_Edtech/Spectra6_13_3/Raspberrypi4/GUIsetup/GuiScript
 python3 epaper_refresh.py
 ```
 
@@ -371,7 +374,8 @@ crontab -e
 
 Add one of the following lines at the bottom of the file:
 
-**Refresh every 30 minutes, between 7am and 10pm:**
+**Refresh every 30 minutes, between 7am and 10pm:** 
+*Entered example path bellow to the epaper_refresh.py script. Enter your script path located in raspberypi. It would be inside """E_INK_Edtech/Spectra6_13_3/Raspberrypi4/GUIsetup/GuiScript/""" in your pi*
 ```cron
 */30 7-22 * * * /home/robotpi/einkenv/bin/python3 /home/robotpi/Eink/RaspberryPi/python/examples/GUIsetup/epaper_refresh.py >> /home/robotpi/epaper_refresh.log 2>&1
 ```
