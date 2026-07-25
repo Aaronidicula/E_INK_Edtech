@@ -236,7 +236,7 @@ The Google Cloud setup steps are the same for both, so do them once:
 
 
 
-### 4.3B — Auth for `epaper_designer.py` and `epaper_refresh.py`
+### 4.3 — Auth for `epaper_designer.py` and `epaper_refresh.py`
 
 Copy `credentials.json` into `GUIsetup/`:
 
@@ -253,7 +253,7 @@ python3 gcal_setup.py
 
 This saves `token.pickle` into `GUIsetup/` — right next to `epaper_designer.py` and `epaper_refresh.py`, which is where they look for it.
 
-### 5.4 What successful auth looks like
+### 4.4 What successful auth looks like
 
 Both scripts print the same confirmation output:
 
@@ -273,7 +273,7 @@ Setup complete!
 
 > 💡 If your token ever expires or stops working, delete `token.pickle` and re-run the relevant `gcal_setup.py` to re-authorise.
 
-### 5.5 Run the main calendar script
+### 4.5 Run the main calendar script
 
 ```bash
 cd ~/Eink/RaspberryPi/python/examples/
@@ -294,7 +294,7 @@ python3 calendar_weekly_art.py
 
 ---
 
-## Step 6 — The Visual Layout Designer (GUI)
+## Step 5 — The Visual Layout Designer (GUI)
 
 `epaper_designer.py` is a full Tkinter desktop app for designing your display layout interactively. Run it on the Pi (with a monitor) or on any Linux computer.
 
@@ -346,11 +346,11 @@ Each widget (Masthead, Photo, Calendar, Tasks, Events, Quote) has its own collap
 
 ---
 
-## Step 7 — Auto-Refresh with Cron
+## Step 6 — Auto-Refresh with Cron
 
 Once you have your `layout.json` saved, `epaper_refresh.py` handles headless auto-refresh — no display or GUI needed.
 
-### 7.1 Test the refresh script manually
+### 6.1 Test the refresh script manually
 
 ```bash
 cd ~/Eink/RaspberryPi/python/examples/GUIsetup/
@@ -363,7 +363,7 @@ Check the log to see what happened:
 cat epaper_refresh.log
 ```
 
-### 7.2 Set up cron for automatic refresh
+### 6.2 Set up cron for automatic refresh
 
 ```bash
 crontab -e
@@ -385,7 +385,7 @@ Add one of the following lines at the bottom of the file:
 
 > ⚠️ **Use the venv Python:** Always use the full path to the Python inside your virtual environment (`einkenv/bin/python3`), not just `python3`. This ensures all your installed packages are available to cron.
 
-### 7.3 Cron syntax quick reference
+### 6.3 Cron syntax quick reference
 
 ```
 * * * * *  command
