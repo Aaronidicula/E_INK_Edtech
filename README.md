@@ -163,11 +163,11 @@ Using a virtual environment keeps your project dependencies isolated and avoids 
 
 ```bash
 cd E_INK_Edtech/
-python3 -m venv ~/einkenv
-source ~/einkenv/bin/activate
+python3 -m venv einkenv
+source einkenv/bin/activate
 ```
 
-> 💡 You'll need to activate this environment every time you open a new terminal: `source ~/einkenv/bin/activate`
+> 💡 You'll need to activate this environment every time you open a new terminal: `source einkenv/bin/activate`
 
 ### 2.5 Install Python packages
 
@@ -188,10 +188,11 @@ pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib
 
 `editted.py` is a **teaching demo** — not a production script. It's designed to help you understand how the display pipeline works before you touch the calendar code. Read through it alongside running it.
 
+### --> run with terminal inside *raspberrypiconnect or with monitor and keyboard connected to raspberry pi*
 ```bash
 cd ~/Eink/RaspberryPi/python/examples/  
 source ~/einkenv/bin/activate
-python3 editted.py  ## --> run with terminal inside raspberrypiconnect or with monitor and keyboard connected to raspberry pi
+python3 editted.py
 ```
 
 **What it does, step by step:**
