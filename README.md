@@ -13,7 +13,7 @@ A complete guide to setting up, running, and customising your Waveshare 13.3" Sp
 3. [Project File Structure](#project-file-structure)
 4. [Step 1 — Raspberry Pi Setup](#step-1--raspberry-pi-setup)
 5. [Step 2 — Install Dependencies](#step-2--install-dependencies)
-6. [Step 3 — Running the Demo](#step-3--running-the-demo-edittedpy--optional-step---can-skip)
+6. [Step 3 — Running the Demo (editted.py) (Optional step - can skip)](#step-3--running-the-demo-edittedpy--optional-step---can-skip)
 7. [Step 4 — Running Your First Display Test](#step-4--running-your-first-display-test)
 8. [Step 5 — Google Calendar & Tasks Integration](#step-5--google-calendar--tasks-integration)
 9. [Step 6 — The Visual Layout Designer (GUI)](#step-6--the-visual-layout-designer-gui)
