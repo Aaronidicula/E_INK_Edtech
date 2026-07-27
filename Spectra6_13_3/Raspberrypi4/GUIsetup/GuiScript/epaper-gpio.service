@@ -1,0 +1,16 @@
+[Unit]
+Description=E-paper frame GPIO button/LED controller
+After=multi-user.target
+
+[Service]
+Type=simple
+# Update this path if your GuiScript folder lives somewhere else.
+ExecStart=/usr/bin/python3 /home/robotpi/Eink/RaspberryPi4/GUIsetup/GuiScript/gpio_control.py
+Restart=on-failure
+RestartSec=2
+# Runs as root so it can call `shutdown -h now` directly (no sudo prompt)
+# and so gpiozero has unrestricted GPIO access.
+User=root
+
+[Install]
+WantedBy=multi-user.target
