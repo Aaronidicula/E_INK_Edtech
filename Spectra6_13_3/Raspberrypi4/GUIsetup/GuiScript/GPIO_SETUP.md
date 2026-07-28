@@ -62,35 +62,47 @@ Wire each button between its GPIO pin and GND (gpiozero's `Button` uses the
 internal pull-up by default, so no external resistor is required). Wire each
 LED's anode through a ~330Ω resistor to its GPIO pin, cathode to GND.
 
-## Power ON/OFF strategy: physical slider switch
+## Power ON/OFF strategy: power bank's own button
 
 Rather than relying on GPIO3's firmware wake-from-halt behaviour (which is
 real, but has model/firmware-dependent conditions that are hard to verify
-without hardware in hand — see earlier discussion), this deployment uses a
-physical slider switch on the power line instead:
+without hardware in hand — see earlier discussion) or a physical slider
+switch (which doesn't suit a fixed USB power-bank cable), this deployment
+uses the power bank's own physical power button:
 
-- **Power ON**: flip the slider on. A Raspberry Pi boots automatically the
-  instant it receives power — no button, no code, no config needed for
-  this half. It just works, on any Pi model.
+- **Power ON**: press the power bank's button so it outputs 5V again. A
+  Raspberry Pi boots automatically the instant it receives power — no
+  button, no code, no config needed on the Pi side for this half. It just
+  works, on any Pi model.
 - **Power OFF**: long-press the GPIO4 button first. `gpio_control.py`
   detects the hold, runs a clean `shutdown -h now`, and turns the GPIO6
-  LED off once the shutdown has actually happened. **Only flip the slider
-  off after the LED goes off.** Cutting power while the Pi is still
-  running is the same risk as unplugging any computer mid-write — usually
-  fine, but can corrupt the SD card over time if it happens repeatedly.
+  LED off once the shutdown has actually happened. **Only consider the
+  power bank "off" (i.e. don't rely on its own auto-shutoff, and don't
+  press its button to cut output early) until the LED goes off.** Cutting
+  power while the Pi is still running is the same risk as unplugging any
+  computer mid-write — usually fine, but can corrupt the SD card over time
+  if it happens repeatedly.
 
-Practical wiring notes for the slider:
-- It must be in series with the **power input** (5V/USB-C line), not
-  connected to any GPIO — GPIO pins can't carry the current a Pi needs.
-- Rate it (or the relay/MOSFET it's driving) for at least 3A to cover
-  Pi 4 power spikes.
-- A physical "off, then on" cycle is indistinguishable from a normal power
-  cycle from the Pi's point of view, so no special firmware config is
-  required for this approach — that's the main appeal versus GPIO3 wake.
+Notes specific to a power bank (vs. mains + switch):
+- Most power banks — including budget/consumer models — auto-shutoff
+  output after the connected device draws very little current for a
+  while. After a clean shutdown, the halted Pi draws almost nothing, so
+  the power bank will likely cut its own output on its own within a
+  minute or so. That's fine and expected it just means you don't
+  usually need to press the bank's button to turn things off, only to
+  turn them back on.
+- Because of that auto-shutoff, GPIO3 wake-from-halt isn't reliable here
+  even if the firmware setting were configured for it — there may be no
+  power left on the board by the time you'd want to wake it. The power
+  bank's button is the dependable "turn it back on" action instead.
+- A physical power-cycle via the bank's button is indistinguishable from
+  a normal power-up from the Pi's point of view, so no special firmware
+  config is required — same appeal as the slider-switch approach would
+  have had, just adapted to the power-bank hardware actually in use.
 
-If you revisit GPIO3-based wake later once you have hardware to test on,
-the earlier notes on `WAKE_ON_GPIO` and the model-dependent caveats still
-apply and nothing here prevents adding it back in.
+If you switch to a mains supply + physical switch later, or revisit
+GPIO3-based wake once you have hardware to test on, nothing here prevents
+adding either back in — the earlier notes on `WAKE_ON_GPIO` still apply.
 
 ## Install
 
