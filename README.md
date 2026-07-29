@@ -189,7 +189,7 @@ sudo apt update && sudo apt upgrade -y
 sudo apt install -y python3-pip python3-pil python3-tk python3-pyqt5 git
 ```
 
-### 2.2 - Cloning & SettingUp the Repo in Laptop and RaspberryPi4
+### 2.2 Cloning & SettingUp the Repo in Laptop and RaspberryPi4
 
 ### 2.3 Clone
 
@@ -281,7 +281,7 @@ The Google Cloud setup steps are the same for both, so do them once:
 
 
 
-### 4.3 — Auth for `epaper_designer.py` and `epaper_refresh.py`
+### 4.3 Auth for `epaper_designer.py` and `epaper_refresh.py`
 
 Copy `credentials.json` into `GUIsetup/GuiScript/`:
 
