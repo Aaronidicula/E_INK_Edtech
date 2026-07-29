@@ -2,7 +2,7 @@
 
 # 🖥️ Waveshare 13.3" Spectra 6 E-Paper Display — Student Guide
 
-A complete guide to setting up, running, and customising your Waveshare 13.3" Spectra 6 e-Paper display on a Raspberry Pi 4. By the end of this guide, you'll have a live calendar dashboard on your desk that auto-refreshes with your Google Calendar events, tasks, photos, and daily quotes.
+A complete guide to setting up, running, and customising your Waveshare 13.3" Spectra 6 e-Paper display on a Raspberry Pi 4. By the end of this guide, you'll have a live calendar dashboard on your desk that auto-refreshes with your Google Calendar events, tasks, photos, and daily quotes — plus physical buttons and LEDs for power, shutdown, and manual refresh.
 
 ---
 
@@ -17,8 +17,9 @@ A complete guide to setting up, running, and customising your Waveshare 13.3" Sp
 7. [Step 4 — Google Calendar & Tasks Integration](#step-4--google-calendar--tasks-integration)
 8. [Step 5 — The Visual Layout Designer (GUI)](#step-5--the-visual-layout-designer-gui)
 9. [Step 6 — Auto-Refresh with Cron](#step-6--auto-refresh-with-cron)
-10. [Troubleshooting](#troubleshooting)
-11. [Quick Reference Cheatsheet](#quick-reference-cheatsheet)
+10. [Step 7 — Physical Buttons & LEDs (GPIO)](#step-7--physical-buttons--leds-gpio)
+11. [Troubleshooting](#troubleshooting)
+12. [Quick Reference Cheatsheet](#quick-reference-cheatsheet)
 
 ---
 
@@ -31,8 +32,9 @@ You'll turn your Waveshare 13.3" Spectra 6 e-Paper display into a smart desk das
 - **Photo slideshow** from a folder of your choice
 - **Daily rotating inspirational quote**
 - **Upcoming events panel**
+- **A physical shutdown button, refresh button, power LED, and refresh-status LED**
 
-The display auto-refreshes on a schedule you define (e.g., every 30 minutes during the day). A Tkinter-based **visual GUI designer** lets you drag, resize, and rearrange every element before pushing it to the screen.
+The display auto-refreshes on a schedule you define (e.g., every 30 minutes during the day). A Tkinter-based **visual GUI designer** lets you drag, resize, and rearrange every element before pushing it to the screen. A small GPIO controller service handles the physical buttons and LEDs independently, running in the background from boot.
 
 ---
 
@@ -45,13 +47,17 @@ The display auto-refreshes on a schedule you define (e.g., every 30 minutes duri
 | Raspberry Pi 4 | Model B recommended (2GB RAM or more) |
 | Waveshare 13.3" Spectra 6 e-Paper HAT | Resolution: 1600 × 1200 px, 6 colours |
 | MicroSD Card | 16 GB minimum, Class 10 |
-| Power Supply | Official Pi 4 USB-C adapter (5V/3A) |
+| Power Supply | Official Pi 4 USB-C adapter (5V/3A), or a power bank with its own physical power button and no forced auto-shutoff below light loads |
 | Monitor + keyboard | Only needed for initial setup |
+| 2× momentary push buttons | GPIO4 (shutdown) and GPIO5 (manual refresh) |
+| 2× LEDs | GPIO6 (power status) and GPIO12 (refresh status) |
+| 2× ~220Ω–330Ω resistors | One in series with each LED |
 
 ### Software
 
 - Raspberry Pi OS (Bookworm or Bullseye, 64-bit recommended)
 - Python 3.9+
+- `gpiozero` (for the button/LED controller — usually preinstalled on Raspberry Pi OS)
 - Internet connection (for Google Calendar sync)
 
 ### Display Colour Palette
@@ -77,34 +83,54 @@ The Spectra 6 driver supports exactly **6 colours**. All artwork is rendered usi
 Spectra6_13_3/
 └── Raspberrypi4/
     │
-    │  ── Demo & Classic Calendar scripts ──────────────────────────────────
-    ├── editted.py                 # 🎓 STUDENT DEMO — learn how the display works
-    ├── calendar_weekly_art.py     # Classic weekly calendar (code-first approach)
-    ├── gcal_setup.py              # GCal auth for editted.py & calendar_weekly_art.py
-    ├── credentials.json           # ← You create this (Google Cloud Console)
-    ├── token.pickle               # ← Auto-created after running gcal_setup.py
-    ├── photo_folder.txt           # ← Auto-saved when you pick a photo folder
-    ├── photo_index.txt            # ← Tracks slideshow position
+    ├── Readme.md                  # Cron quick-notes (separate from this file)
+    ├── gcal_setup.py               # Duplicate copy of the demo-workflow auth script
+    │                                # (identical to CustomDemoFIles/test_scripts/gcal_setup.py below)
     │
-    ├── lib/                       # Waveshare Python drivers
-    │   └── epd13in3E.py
+    ├── CustomDemoFIles/
+    │   ├── lib/                    # Waveshare Python drivers (demo copy)
+    │   │   ├── __init__.py
+    │   │   ├── epdconfig.py
+    │   │   └── epd13in3E.py
+    │   ├── pic/                    # Fonts and assets (demo copy)
+    │   │   ├── 13in3E.bmp
+    │   │   └── Font.ttc
+    │   └── test_scripts/            ── Demo & Classic Calendar scripts ──
+    │       ├── editted.py                 # 🎓 STUDENT DEMO — learn how the display works
+    │       ├── calendar_weekly_art.py     # Classic weekly calendar (code-first approach)
+    │       ├── gcal_setup.py              # GCal auth for editted.py & calendar_weekly_art.py
+    │       ├── epd_13in3E_test.py         # Raw Waveshare driver test script
+    │       ├── credentials.json           # ← You create this (Google Cloud Console)
+    │       ├── token.pickle               # ← Auto-created after running gcal_setup.py
+    │       ├── photo_folder.txt           # ← Auto-saved when you pick a photo folder
+    │       └── photo_index.txt            # ← Tracks slideshow position
     │
-    ├── pic/                       # Fonts and assets
-    │   └── Font.ttc
-    │
-    └── GUIsetup/GuiScript                 ── GUI Designer & Auto-refresh ────────────
-        ├── epaper_designer.py     # Visual drag-and-drop layout designer
-        ├── epaper_refresh.py      # Headless cron refresh (reads layout.json)
-        ├── layout.json            # ← Saved from designer, read by refresh
-        ├── gcal_setup.py          # GCal auth for epaper_designer & epaper_refresh
-        ├── credentials.json       # ← Your own copy here for the GUI workflow
-        ├── token.pickle           # ← Auto-created after running GUIsetup/gcal_setup.py
-        └── epaper_refresh.log     # Auto-created refresh log
+    └── GUIsetup/
+        ├── lib/                       # Waveshare Python drivers
+        │   ├── __init__.py
+        │   ├── epdconfig.py
+        │   └── epd13in3E.py
+        ├── pic/                       # Fonts and assets
+        │   ├── 13in3E.bmp
+        │   ├── Font.ttc
+        │   └── placeholder.txt
+        └── GuiScript/                  ── GUI Designer, Auto-refresh & GPIO ──
+            ├── epaper_designer.py     # Visual drag-and-drop layout designer
+            ├── epaper_refresh.py      # Headless cron refresh (reads layout.json)
+            ├── gpio_control.py        # Buttons + LEDs daemon (GPIO4/5/6/12)
+            ├── epaper-gpio.service    # systemd unit — autostarts gpio_control.py
+            ├── GPIO_SETUP.md          # Wiring, install steps, pin reference
+            ├── layout.json            # ← Saved from designer, read by refresh
+            ├── gcal_setup.py          # GCal auth for epaper_designer & epaper_refresh
+            ├── credentials.json       # ← Your own copy here for the GUI workflow
+            ├── token.pickle           # ← Auto-created after running GUIsetup/GuiScript/gcal_setup.py
+            ├── epaper_refresh.log     # Auto-created refresh log
+            └── gpio_control.log       # Auto-created GPIO controller log
 ```
 
 > 📌 **Two separate `gcal_setup.py` files — use the right one!**
 > - `Raspberrypi4/gcal_setup.py` → authorises **`editted.py`** and **`calendar_weekly_art.py`**
-> - `GUIsetup/gcal_setup.py` → authorises **`epaper_designer.py`** and **`epaper_refresh.py`**
+> - `GUIsetup/GuiScript/gcal_setup.py` → authorises **`epaper_designer.py`** and **`epaper_refresh.py`**
 >
 > Each script looks for `credentials.json` and `token.pickle` in its **own folder**. Keep them separate.
 
@@ -136,6 +162,21 @@ ls /dev/spi*
 ```
 
 If nothing shows up, SPI is not enabled — go back to `raspi-config`.
+
+### 1.3 Required boot config for the e-paper HAT
+
+Per Waveshare's manual for the 13.3" HAT+ (E), add these two lines to
+`/boot/firmware/config.txt` (or `/boot/config.txt` on older Raspberry Pi OS)
+so the display's two chip-select lines are held low at boot, before any
+script runs:
+
+```
+gpio=7=op,dl
+gpio=8=op,dl
+```
+
+Save, then `sudo reboot`. This is a one-time kernel-level setting — nothing
+in this repo needs to apply it at runtime.
 
 ---
 
@@ -180,6 +221,12 @@ pip install Pillow PyQt5 ## if it fails --> pip install --break-system-packages 
 pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib
 ```
 
+### 2.7 For the physical buttons & LEDs
+
+```bash
+pip install gpiozero --break-system-packages   # usually already present on Raspberry Pi OS
+```
+
 ---
 
 ## Step 3 — Running the Demo
@@ -188,7 +235,7 @@ pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib
 
 ### --> run with terminal inside <u>*raspberrypiconnect or with monitor and keyboard connected to raspberry pi*</u>
 ```bash
-cd /Spectra6_13_3/Raspberrypi4/CustomDemoFIles/test_scripts
+cd ~/E_INK_Edtech/Spectra6_13_3/Raspberrypi4/CustomDemoFIles/test_scripts
 source ~/E_INK_Edtech/einkenv/bin/activate
 python3 editted.py
 ```
@@ -236,17 +283,17 @@ The Google Cloud setup steps are the same for both, so do them once:
 
 ### 4.3 — Auth for `epaper_designer.py` and `epaper_refresh.py`
 
-Copy `credentials.json` into `GUIsetup/`:
+Copy `credentials.json` into `GUIsetup/GuiScript/`:
 
 ```bash
 scp ~/Downloads(*give the folder path where credentials.json is located*)/credentials.json username@hostname.local:~/E_INK_Edtech/Spectra6_13_3/Raspberrypi4/GUIsetup/GuiScript
 ```
 
-Then run the auth script from the GUIsetup directory:
+Then run the auth script from the GuiScript directory:
 
 ```bash
 cd
-cd ~/E_INK_Edtech/Spectra6_13_3/RaspberryPi4/GUIsetup/GuiScript/
+cd ~/E_INK_Edtech/Spectra6_13_3/Raspberrypi4/GUIsetup/GuiScript/
 python3 gcal_setup.py
 ```
 
@@ -342,7 +389,7 @@ Each widget (Masthead, Photo, Calendar, Tasks, Events, Quote) has its own collap
 2. Toggle and reposition widgets using the left panel or by dragging on canvas
 3. Click **↻ GCal Sync** to see real calendar events in the preview
 4. Click **👁 Preview** to refresh the canvas
-5. Happy with the layout? Click **📋 Save Config** and save as `layout.json` in the `GUIsetup/` folder
+5. Happy with the layout? Click **📋 Save Config** and save as `layout.json` in the `GUIsetup/GuiScript/` folder
 6. Click **🖥 Push Display** to see it on the actual screen
 
 ---
@@ -382,6 +429,7 @@ Add one of the following lines at the bottom of the file:
 **Refresh at the 5th minute of every hour, between 7am and 10pm:**
 ```cron
 5 7-22 * * * /home/robotpi/E_INK_Edtech/einkenv/bin/python3 /home/robotpi/E_INK_Edtech/Spectra6_13_3/Raspberrypi4/GUIsetup/GuiScript/epaper_refresh.py >> /home/robotpi/epaper_refresh.log 2>&1
+```
 
 > ⚠️ **Important:** Replace `/home/robotpi/` with your actual home directory path. Use `echo $HOME` to find yours.
 
@@ -406,6 +454,66 @@ Add one of the following lines at the bottom of the file:
 
 ---
 
+## Step 7 — Physical Buttons & LEDs (GPIO)
+
+A separate, always-on background service (`gpio_control.py`) watches two
+buttons and drives two LEDs. It runs independently of `epaper_designer.py`
+and `epaper_refresh.py` — it calls `epaper_refresh.py` as a subprocess when
+the refresh button is pressed, but neither of those two scripts needed any
+code changes to support it.
+
+### 7.1 Hardware (BCM numbering)
+
+| Pin | Component | Behaviour |
+|-----|-----------|-----------|
+| GPIO4  | Push button | Hold ≥3s while the Pi is running → clean shutdown (`shutdown -h now`) |
+| GPIO5  | Push button | Short press → triggers `epaper_refresh.py` (next photo / latest tasks & events) |
+| GPIO6  | LED (+ resistor) | On once the Pi has fully booted, off right before shutdown |
+| GPIO12 | LED (+ resistor) | Off when idle, blinks continuously while a refresh is in progress |
+
+Buttons wire straight to GND (gpiozero's internal pull-up is used, no
+external resistor needed). Each LED needs a series resistor between its
+GPIO pin and its anode; the cathode goes to GND.
+
+**Power on/off:** power-on is handled physically — either by the power
+bank's own button, or a slider switch on the power line, depending on your
+setup — not by any GPIO pin. A Raspberry Pi always boots automatically the
+instant it receives power. Only power-*off* runs through GPIO4, and only as
+a long-press so a quick tap doesn't accidentally shut it down. See
+`GPIO_SETUP.md` for the full reasoning, including why GPIO3 wake-from-halt
+was considered and not used, and for the exact e-paper HAT pin list this
+was cross-checked against to confirm there's no pin conflict.
+
+### 7.2 Install as a boot service
+
+```bash
+cd ~/E_INK_Edtech/Spectra6_13_3/Raspberrypi4/GUIsetup/GuiScript
+
+sudo cp epaper-gpio.service /etc/systemd/system/
+
+# edit the ExecStart path inside if your folder differs
+sudo nano /etc/systemd/system/epaper-gpio.service
+
+sudo systemctl daemon-reload
+sudo systemctl enable --now epaper-gpio.service
+```
+
+`enable` adds it to startup so it runs on every future boot automatically;
+`--now` also starts it immediately without needing a reboot.
+
+### 7.3 Check it's working
+
+```bash
+sudo systemctl status epaper-gpio.service
+tail -f ~/E_INK_Edtech/Spectra6_13_3/Raspberrypi4/GUIsetup/GuiScript/gpio_control.log
+```
+
+Full wiring diagrams, resistor values, the complete e-paper HAT pin
+reference, and the reasoning behind each hardware decision live in
+**`GPIO_SETUP.md`** in the same folder — read that before soldering.
+
+---
+
 ## Choosing the Right Script for Your Use Case
 
 | Goal | Script to use |
@@ -413,11 +521,12 @@ Add one of the following lines at the bottom of the file:
 | Learn how the display works | `editted.py` (demo) |
 | Display a weekly calendar with GCal | `calendar_weekly_art.py` |
 | Authorise GCal for the above two | `Raspberrypi4/gcal_setup.py` |
-| Design a custom layout visually | `GUIsetup/epaper_designer.py` |
-| Auto-refresh from a saved layout | `GUIsetup/epaper_refresh.py` (via cron) |
-| Authorise GCal for the above two | `GUIsetup/gcal_setup.py` |
+| Design a custom layout visually | `GUIsetup/GuiScript/epaper_designer.py` |
+| Auto-refresh from a saved layout | `GUIsetup/GuiScript/epaper_refresh.py` (via cron) |
+| Authorise GCal for the above two | `GUIsetup/GuiScript/gcal_setup.py` |
+| Handle physical buttons & LEDs | `GUIsetup/GuiScript/gpio_control.py` (via systemd) |
 
-**There are two independent workflows — pick one (or both):**
+**There are two independent workflows — pick one (or both) — plus an optional third for physical controls:**
 
 ```
 ── Workflow A: Classic / Code-first ──────────────────────────────────────
@@ -434,9 +543,16 @@ Add one of the following lines at the bottom of the file:
   GuiScript/epaper_designer.py     →  Design layout visually, save layout.json
           ↓
   GuiScript/epaper_refresh.py      →  Set up in cron for auto-refresh
+
+
+── Workflow C: Physical controls (optional, alongside either workflow) ───
+  GuiScript/epaper-gpio.service    →  Enable once via systemctl (runs at boot forever)
+          ↓
+  GuiScript/gpio_control.py        →  Watches GPIO4/5, drives GPIO6/12,
+                                       calls epaper_refresh.py on demand
 ```
 
-> Most students will use **Workflow B** (GUI) for the final display and **`editted.py`** purely to understand the code concepts first.
+> Most students will use **Workflow B** (GUI) for the final display, **`editted.py`** to understand the code concepts first, and **Workflow C** if their build includes physical buttons/LEDs.
 
 ---
 
@@ -509,6 +625,14 @@ CALENDAR_IDS = ["primary"]
 # CALENDAR_IDS = ["primary", "your_other_calendar@group.calendar.google.com"]
 ```
 
+### Changing GPIO button/LED behaviour
+
+In `gpio_control.py`:
+```python
+LONG_PRESS_SECONDS = 3.0   # how long to hold GPIO4 before it triggers shutdown
+BLINK_INTERVAL     = 0.4   # GPIO12 blink speed while refreshing
+```
+
 ---
 
 ## Troubleshooting
@@ -534,12 +658,13 @@ pip install Pillow
 - Confirm SPI is enabled (`ls /dev/spi*`)
 - Make sure the HAT is seated correctly on the GPIO pins
 - Try calling `epd.Clear()` manually — the display needs an explicit clear on first use
+- Confirm the `gpio=7=op,dl` / `gpio=8=op,dl` lines from Step 1.3 are present in `config.txt` and you've rebooted since adding them
 
 ### Google Calendar returns no events
 
 - Check that `token.pickle` exists **in the same folder as the script you're running**:
   - `Raspberrypi4/token.pickle` for `calendar_weekly_art.py`
-  - `GUIsetup/token.pickle` for `epaper_designer.py` / `epaper_refresh.py`
+  - `GUIsetup/GuiScript/token.pickle` for `epaper_designer.py` / `epaper_refresh.py`
 - Token may be expired — delete the relevant `token.pickle` and re-run the matching `gcal_setup.py`
 - Verify your system clock is correct: `date`
 
@@ -553,7 +678,7 @@ cat ~/epaper_refresh.log
 Common issues:
 - Wrong Python path in crontab (must be the venv Python, not system `python3`)
 - Wrong path to the script
-- Missing `layout.json` in the `GUIsetup/` folder
+- Missing `layout.json` in the `GUIsetup/GuiScript/` folder
 
 Test the exact cron command manually in your terminal first to confirm it works before relying on cron.
 
@@ -568,6 +693,20 @@ cp ~/e-Paper/RaspberryPi_JetsonNano/python/pic/Font.ttc \
 ### Display shows garbled colours
 
 You may be passing an image with colours outside the 6-colour Spectra palette. Make sure all rendered colours use only: Black, White, Red, Green, Blue, Yellow.
+
+### Buttons/LEDs not responding
+
+- Check the service is actually running: `sudo systemctl status epaper-gpio.service`
+- Check the log: `tail -f gpio_control.log`
+- Confirm wiring: buttons to GND (no resistor needed), LEDs through a resistor to GND, correct BCM pin numbers (4, 5, 6, 12)
+- If the service shows a permissions error touching GPIO, confirm it's running as `User=root` in `epaper-gpio.service`
+- If GPIO4/5/6/12 don't respond but the e-paper display works fine, double check nothing else is also claiming those pins — see the reserved-pin list in `GPIO_SETUP.md`
+
+### Power bank cuts out shortly after shutdown
+
+This is expected behaviour for most power banks (auto-shutoff under low
+current draw), not a bug in `gpio_control.py`. See the "Power ON/OFF
+strategy" section in `GPIO_SETUP.md`.
 
 ---
 
@@ -592,7 +731,7 @@ python3 calendar_weekly_art.py --no-gcal            # Offline mode
 python3 calendar_weekly_art.py --save preview.png --preview-only  # PNG only
 
 # ── GCal auth for epaper_designer & epaper_refresh ────────────────────
-cd ~/Eink/RaspberryPi/python/examples/GUIsetup/
+cd ~/Eink/RaspberryPi/python/examples/GUIsetup/GuiScript/
 python3 gcal_setup.py                  # Saves token.pickle here (separate!)
 
 # ── Visual designer ────────────────────────────────────────────────────
@@ -604,11 +743,17 @@ python3 epaper_refresh.py              # One-shot headless refresh
 # ── Cron setup ─────────────────────────────────────────────────────────
 crontab -e
 # Add:
-# */30 7-22 * * * /home/YOUR_USER/einkenv/bin/python3 /home/YOUR_USER/Eink/RaspberryPi/python/examples/GUIsetup/epaper_refresh.py >> /home/YOUR_USER/GUIsetup/epaper_refresh.log 2>&1
+# */30 7-22 * * * /home/YOUR_USER/einkenv/bin/python3 /home/YOUR_USER/Eink/RaspberryPi/python/examples/GUIsetup/GuiScript/epaper_refresh.py >> /home/YOUR_USER/GUIsetup/epaper_refresh.log 2>&1
 
 # ── Check refresh log ──────────────────────────────────────────────────
-cat GUIsetup/epaper_refresh.log        # View last refresh output
-tail -f GUIsetup/epaper_refresh.log    # Live log watching
+cat GUIsetup/GuiScript/epaper_refresh.log        # View last refresh output
+tail -f GUIsetup/GuiScript/epaper_refresh.log    # Live log watching
+
+# ── GPIO buttons/LEDs service ──────────────────────────────────────────
+sudo systemctl enable --now epaper-gpio.service  # Install + start at boot
+sudo systemctl status epaper-gpio.service        # Check it's running
+tail -f GUIsetup/GuiScript/gpio_control.log      # Live GPIO log watching
+sudo systemctl restart epaper-gpio.service       # Restart after editing gpio_control.py
 ```
 
 ---
@@ -620,8 +765,9 @@ tail -f GUIsetup/epaper_refresh.log    # Live log watching
 - **The designer GUI is your friend** — drag widgets around, see results instantly, then push to display when happy.
 - **E-paper refreshes are slow** (~15–30 seconds) and the display flashes black/white during refresh — this is normal.
 - **Don't refresh too often** — e-paper screens have a limited refresh cycle lifetime. Once every 15–30 minutes is plenty.
-- **`token.pickle` must live next to the script that uses it** — `Raspberrypi4/token.pickle` for the classic scripts, `GUIsetup/token.pickle` for the designer. Run the matching `gcal_setup.py` from the correct directory.
+- **`token.pickle` must live next to the script that uses it** — `Raspberrypi4/token.pickle` for the classic scripts, `GUIsetup/GuiScript/token.pickle` for the designer. Run the matching `gcal_setup.py` from the correct directory.
 - **Working on a PC first?** Both `epaper_designer.py` and the rendering code work on any computer with Pillow and Tkinter installed. The only part that needs the Pi is the actual `epd.display()` call to push to hardware.
+- **The GPIO controller is independent of everything else** — it's a separate systemd service that just happens to call `epaper_refresh.py` as a subprocess. You can develop/test the calendar side entirely without wiring up any buttons or LEDs, and add Step 7 later whenever the hardware is ready.
 
 ---
 
