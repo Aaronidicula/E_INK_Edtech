@@ -19,3 +19,5 @@ For *UI design use epaper_designer.py* and in crontab -e use *epaper_refresh.py*
 
 ### Some_Electrical_Notes
 ![Raspberrypi4](ImageNotes/PCB_Eink.png)
+
+![Raspberrypi4](ImageNotes/Schematic.png)
