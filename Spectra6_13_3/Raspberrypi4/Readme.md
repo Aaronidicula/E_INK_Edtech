@@ -46,7 +46,7 @@ Located inside the `GUIsetup` directory.
 
 ### PCB Routing Diagram
 
-![Raspberrypi4](ImageNotes/PCB_Eink.png)
+![Raspberrypi4](ImageNotes/EinkedtechPCB.png)
 
 | Element | Meaning |
 |---|---|
